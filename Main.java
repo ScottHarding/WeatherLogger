@@ -1,33 +1,31 @@
 import java.util.Scanner;
-import java.util.ArrayList;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.nio.file.StandardOpenOption;
-
 
 public class Main {
 	public static final String DATAFILENAME = "data.csv";
 
+	/**
+	 * Checks of the data file exists. If not, one is created.
+	 * 
+	 * @throws IOException If file exists and tries to create it.
+	 */
 	public static void checkDatabaseIntegrity() {
 		Path path = Paths.get(DATAFILENAME);
-
-		// 1. Check if the path exists (can be a file OR a directory)
 		if (Files.exists(path)) {
-
-			// 2. To ensure it is specifically a regular file and not a directory
 			if (Files.isRegularFile(path)) {
-				System.out.println("Data file exists and is a regular file.");
+//				System.out.println("Data file exists and is a regular file.");
 			}
 		} else {
 			System.out.println("The file does not exist, creating.");
 			try {
 				// Creates the file; throws exception if it already exists
+				// Shouldn't get here if the file exists.
 				Path newFile = Files.createFile(path);
 				System.out.println("File created successfully at: " + newFile.toAbsolutePath());
 			} catch (IOException e) {
@@ -36,45 +34,65 @@ public class Main {
 		}
 	}
 
+	/**
+	 * Description
+	 *
+	 * @param
+	 * @retrun
+	 * @throws
+	 */
 	public static void printMenu() {
 		System.out.println("1. Log New Weather Data");
 		System.out.println("2. Show All Weather Entries");
 		System.out.println("3. Show Weather Averages");
 		System.out.println("4. Exit");
-		System.out.println("Enter Choice");
+		System.out.print("Enter Choice: ");
 	}
 
+	/**
+	 * Description
+	 *
+	 * @param
+	 * @return Entry An Entry object
+	 * @throws
+	 */
 	public static Entry getUserInput() {
 		Scanner scanner = new Scanner(System.in);
-		Entry e = new Entry();
-
-		System.out.println("Enter Date (YYYY-MM-DD):");
+		Entry entry = new Entry();
+		System.out.print("Enter Date (YYYY-MM-DD): ");
 		String date = scanner.nextLine();
-		e.setDate(date);
-		System.out.println("Enter Temperature (Celsius):");
+		entry.setDate(date);
+		System.out.print("Enter Temperature (Celsius): ");
 		float choice = scanner.nextFloat();
-		e.setTemperature(choice);
-		System.out.println("Enter Humidity (%):");
+		entry.setTemperature(choice);
+		System.out.print("Enter Humidity (%): ");
 		choice = scanner.nextFloat();
-		e.setHumidity(choice);
-		System.out.println("Enter Precipitation (mm):");
+		entry.setHumidity(choice);
+		System.out.print("Enter Precipitation (mm): ");
 		choice = scanner.nextFloat();
-		e.setPrecipitation(choice);
+		entry.setPrecipitation(choice);
+		//this causes exception not sure why
 //		scanner.close();
-		return e;
+		return entry;
 	}
 
-	public static void readDataBase() {
+	/**
+	 * Description Prints the entire database
+	 *
+	 * @param
+	 * @retrun
+	 * @throws
+	 */
+	public static void printDataBase() {
 		String csvFile = DATAFILENAME;
 		String line = "";
 		String csvSplitBy = ",";
+		System.out.println("");
 
 		try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
 			while ((line = br.readLine()) != null) {
 				// Split the row by comma
 				String[] row = line.split(csvSplitBy);
-
-				// Process data (Example: print the first two columns)
 				if (row.length > 0) {
 					System.out.println(row[0] + "," + row[1] + "," + row[2] + "," + row[3]);
 				}
@@ -82,8 +100,16 @@ public class Main {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		System.out.println("");
 	}
 
+	/**
+	 * Description
+	 *
+	 * @param
+	 * @retrun
+	 * @throws
+	 */
 	public static void printAverages() {
 		float averageTemperature = 0;
 		float averageHumidity = 0;
@@ -96,7 +122,7 @@ public class Main {
 		long numbLines = 0;
 		try {
 			numbLines = Files.lines(path).count();
-			System.out.println("Size: " + numbLines + " Entries");
+//			System.out.println("Size: " + numbLines + " Entries");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -106,8 +132,6 @@ public class Main {
 				while ((line = br.readLine()) != null) {
 					// Split the row by comma
 					String[] row = line.split(csvSplitBy);
-
-					// Process data (Example: print the first two columns)
 					if (row.length > 0) {
 						averageTemperature += Float.parseFloat(row[1]) / numbLines;
 						averageHumidity += Float.parseFloat(row[2]) / numbLines;
@@ -117,15 +141,26 @@ public class Main {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			System.out.printf("Avg. Temp: %f\n", averageTemperature);
-			System.out.printf("Avg. Humidity: %f\n", averageHumidity);
-			System.out.printf("Avg. Precipitation: %f\n", averagePrecipitation);
+			System.out.println("");
+			System.out.printf("Average Temperature: %.1f", averageTemperature);
+			System.out.println("\u00B0C");
+			System.out.printf("Average Humidity: %.1f", averageHumidity);
+			System.out.println("%");
+			System.out.printf("Average Precipitation: %.1f mm\n", averagePrecipitation);
+			System.out.println("");
 		}
 	}
 
+	/**
+	 * Adds an entry to the database by writing to CSV data file.
+	 *
+	 * @param entry The Entry object to write.
+	 * @throws IOException If subtotal is negative.
+	 */
 	public static void addEntrytoDataBase(Entry entry) {
 		Path filePath = Paths.get(DATAFILENAME);
-		String textToAppend = entry.getDate() + "," +entry.getTemperature() + "," + entry.getHumidity() + "," + entry.getPrecipitation() + "\n";
+		String textToAppend = entry.getDate() + "," + entry.getTemperature() + "," + entry.getHumidity() + ","
+				+ entry.getPrecipitation() + "\n";
 		try {
 			Files.writeString(filePath, textToAppend, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 		} catch (IOException e) {
@@ -134,8 +169,14 @@ public class Main {
 		System.out.println("Data logged successfully");
 	}
 
+	/**
+	 * Description
+	 *
+	 * @param
+	 * @retrun
+	 * @throws
+	 */
 	public static void main(String[] args) {
-		System.out.println("WeatherLogger v1.1");
 		checkDatabaseIntegrity();
 		Scanner scanner = new Scanner(System.in);
 		boolean running = true;
@@ -147,7 +188,7 @@ public class Main {
 				addEntrytoDataBase(getUserInput());
 				break;
 			case 2:
-				readDataBase();
+				printDataBase();
 				break;
 			case 3:
 				printAverages();
@@ -155,12 +196,12 @@ public class Main {
 			case 4:
 				running = false;
 				System.out.println("Exiting");
-				scanner.close();
 				break;
 			default:
-				System.out.println("Invalid");
+				System.out.println("Invalid Entry");
 				break;
 			}
 		}
+		scanner.close();
 	}
 }
